@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Penghitung Poin Remi</title>
+    <title>Penghitung Poin Remi Pro</title>
     <style>
         * {
             box-sizing: border-box;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
         body {
             background-color: #121212;
@@ -19,93 +20,178 @@
         }
         .container {
             width: 100%;
-            max-width: 500px;
+            max-width: 540px;
             background: #1e1e1e;
             padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+        }
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
         }
         h2 {
-            text-align: center;
-            margin-top: 0;
+            margin: 0;
             color: #4caf50;
+            font-size: 22px;
+        }
+        .sound-toggle {
+            background: #2c2c2c;
+            border: 1px solid #444;
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            width: auto;
+            margin: 0;
         }
         .setup-section input {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             margin-bottom: 10px;
-            border-radius: 6px;
+            border-radius: 8px;
             border: 1px solid #333;
             background: #2c2c2c;
             color: white;
             font-size: 16px;
+            transition: border 0.2s;
+        }
+        .setup-section input:focus {
+            outline: none;
+            border-color: #4caf50;
         }
         button {
             width: 100%;
             padding: 12px;
             border: none;
-            border-radius: 6px;
-            font-size: 16px;
+            border-radius: 8px;
+            font-size: 15px;
             font-weight: bold;
             cursor: pointer;
-            margin-top: 5px;
+            transition: transform 0.1s, opacity 0.2s;
         }
-        .btn-primary { background-color: #4caf50; color: white; }
-        .btn-primary:hover { background-color: #45a049; }
-        .btn-danger { background-color: #d32f2f; color: white; margin-top: 20px; font-size: 14px; padding: 8px; }
+        button:active {
+            transform: scale(0.97);
+        }
+        .btn-primary { background-color: #4caf50; color: white; margin-top: 8px; }
+        .btn-primary:hover { background-color: #43a047; }
         
+        .action-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+        .btn-warning { background-color: #ff9800; color: #121212; flex: 1; font-size: 13px; padding: 10px; }
+        .btn-danger { background-color: #d32f2f; color: white; flex: 1; font-size: 13px; padding: 10px; }
+
         /* Area Game */
         .hidden { display: none; }
         .score-inputs {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            grid-template-columns: repeat(2, 1fr);
             gap: 10px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
         .player-input-box {
-            background: #2c2c2c;
+            background: #262626;
             padding: 10px;
-            border-radius: 8px;
+            border-radius: 10px;
+            border: 1px solid #333;
             text-align: center;
         }
         .player-input-box label {
             display: block;
             font-weight: bold;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
             font-size: 14px;
+            color: #e0e0e0;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 6px;
+        }
+        .btn-sign {
+            width: 36px;
+            height: 38px;
+            padding: 0;
+            background: #383838;
+            color: #fff;
+            font-size: 18px;
+            border-radius: 6px;
+        }
         .player-input-box input {
             width: 100%;
-            padding: 8px;
+            height: 38px;
+            padding: 4px;
             text-align: center;
-            border-radius: 4px;
+            border-radius: 6px;
             border: 1px solid #444;
             background: #121212;
             color: white;
             font-size: 16px;
+            font-weight: bold;
         }
+        .quick-pills {
+            display: flex;
+            justify-content: space-between;
+            gap: 4px;
+        }
+        .pill {
+            background: #333;
+            color: #bbb;
+            font-size: 11px;
+            padding: 4px 0;
+            border-radius: 4px;
+            flex: 1;
+            font-weight: normal;
+        }
+        .pill:hover { background: #444; color: #fff; }
 
         /* Tabel Riwayat & Total */
+        .table-wrapper {
+            overflow-x: auto;
+            margin-top: 20px;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
             font-size: 14px;
         }
         th, td {
-            border: 1px solid #333;
+            border-bottom: 1px solid #333;
+            border-right: 1px solid #333;
             padding: 10px 6px;
             text-align: center;
         }
-        th { background-color: #2c2c2c; color: #bbb; }
+        th:last-child, td:last-child { border-right: none; }
+        th { background-color: #2c2c2c; color: #bbb; font-size: 13px; }
+        
+        /* Animasi baris baru */
+        @keyframes fadeInRow {
+            from { opacity: 0; transform: translateY(-6px); background-color: rgba(76, 175, 80, 0.25); }
+            to { opacity: 1; transform: translateY(0); background-color: transparent; }
+        }
+        .new-row {
+            animation: fadeInRow 0.5s ease-out;
+        }
+
         .total-row {
-            background-color: #263238;
+            background-color: #222d32;
             font-weight: bold;
             font-size: 16px;
-            color: #4caf50;
+        }
+        .leader {
+            color: #ffd700 !important;
+            text-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
         }
         .minus { color: #ff5252; }
         .plus { color: #69f0ae; }
@@ -114,16 +200,19 @@
 <body>
 
 <div class="container">
-    <h2>♠️ Poin Remi ♥️</h2>
+    <div class="header-bar">
+        <h2>♠️ Poin Remi ♥️</h2>
+        <button id="soundBtn" class="sound-toggle" onclick="toggleSound()">🔊 Suara: ON</button>
+    </div>
 
     <!-- Bagian 1: Input Nama Pemain -->
     <div id="setupSection" class="setup-section">
-        <p style="font-size: 14px; color: #aaa;">Masukkan nama pemain (minimal 2, maksimal 4):</p>
+        <p style="font-size: 14px; color: #aaa; margin-top: 0;">Masukkan nama pemain (2 - 4 orang):</p>
         <input type="text" id="p1" placeholder="Nama Pemain 1">
         <input type="text" id="p2" placeholder="Nama Pemain 2">
         <input type="text" id="p3" placeholder="Nama Pemain 3 (Opsional)">
         <input type="text" id="p4" placeholder="Nama Pemain 4 (Opsional)">
-        <button class="btn-primary" onclick="mulaiGame()">Mulai Permainan</button>
+        <button class="btn-primary" onclick="mulaiGame()">Mulai Permainan 🚀</button>
     </div>
 
     <!-- Bagian 2: Arena Permainan & Riwayat -->
@@ -131,31 +220,78 @@
         <div id="inputContainer" class="score-inputs"></div>
         <button class="btn-primary" onclick="tambahRonde()">+ Catat Poin Ronde Ini</button>
 
-        <table>
-            <thead>
-                <tr id="tableHeader">
-                    <th>Ronde</th>
-                </tr>
-            </thead>
-            <tbody id="historyBody">
-                <!-- Riwayat ronde masuk ke sini -->
-            </tbody>
-            <tfoot>
-                <tr id="totalRow" class="total-row">
-                    <td>TOTAL</td>
-                </tr>
-            </tfoot>
-        </table>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr id="tableHeader">
+                        <th>Ronde</th>
+                    </tr>
+                </thead>
+                <tbody id="historyBody"></tbody>
+                <tfoot>
+                    <tr id="totalRow" class="total-row">
+                        <td>TOTAL</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
 
-        <button class="btn-danger" onclick="resetGame()">Reset / Ganti Pemain</button>
+        <div class="action-row">
+            <button class="btn-warning" onclick="undoRonde()">↩️ Hapus Ronde Terakhir</button>
+            <button class="btn-danger" onclick="resetGame()">🗑️ Reset Pemain</button>
+        </div>
     </div>
 </div>
 
 <script>
     let players = [];
-    let history = []; // Menyimpan array poin per ronde
+    let history = [];
+    let soundEnabled = true;
 
-    // Cek apakah ada data tersimpan saat halaman dibuka
+    // Generator efek suara sederhana tanpa file eksternal
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSound(type) {
+        if (!soundEnabled) return;
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        const now = audioCtx.currentTime;
+        if (type === 'add') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(523.25, now); // Nada C5
+            osc.frequency.exponentialRampToValueAtTime(880, now + 0.12); // Naik ke A5
+            gain.gain.setValueAtTime(0.15, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+            osc.start(now);
+            osc.stop(now + 0.15);
+        } else if (type === 'undo') {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(300, now);
+            osc.frequency.exponentialRampToValueAtTime(150, now + 0.15);
+            gain.gain.setValueAtTime(0.15, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+            osc.start(now);
+            osc.stop(now + 0.15);
+        } else if (type === 'tap') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, now);
+            gain.gain.setValueAtTime(0.05, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.04);
+            osc.start(now);
+            osc.stop(now + 0.04);
+        }
+    }
+
+    function toggleSound() {
+        soundEnabled = !soundEnabled;
+        document.getElementById('soundBtn').innerText = soundEnabled ? '🔊 Suara: ON' : '🔇 Suara: OFF';
+        if (soundEnabled) playSound('tap');
+    }
+
     window.onload = function() {
         const savedPlayers = localStorage.getItem('remi_players');
         const savedHistory = localStorage.getItem('remi_history');
@@ -174,15 +310,14 @@
             document.getElementById('p4').value.trim()
         ];
 
-        // Ambil hanya kolom yang diisi
         players = inputs.filter(name => name !== "");
-
         if (players.length < 2) {
             alert("Minimal masukkan 2 nama pemain!");
             return;
         }
 
         history = [];
+        playSound('add');
         simpanData();
         tampilkanArena();
     }
@@ -191,68 +326,160 @@
         document.getElementById('setupSection').classList.add('hidden');
         document.getElementById('gameSection').classList.remove('hidden');
 
-        // Buat kotak input poin & header tabel sesuai jumlah pemain
         const inputContainer = document.getElementById('inputContainer');
-        const tableHeader = document.getElementById('tableHeader');
-        
         inputContainer.innerHTML = '';
-        tableHeader.innerHTML = '<th>Ronde</th>';
 
         players.forEach((player, index) => {
-            // Kotak input
             inputContainer.innerHTML += `
                 <div class="player-input-box">
-                    <label>${player}</label>
-                    <input type="number" id="score_${index}" placeholder="0" inputmode="numeric">
+                    <label id="label_${index}">${player}</label>
+                    <div class="input-group">
+                        <button type="button" class="btn-sign" onclick="ubahTanda(${index})">±</button>
+                        <input type="number" id="score_${index}" placeholder="0" inputmode="numeric">
+                    </div>
+                    <div class="quick-pills">
+                        <button type="button" class="pill" onclick="tambahCepat(${index}, -10)">-10</button>
+                        <button type="button" class="pill" onclick="tambahCepat(${index}, 10)">+10</button>
+                        <button type="button" class="pill" onclick="tambahCepat(${index}, 25)">+25</button>
+                    </div>
                 </div>
             `;
-            // Header tabel
-            tableHeader.innerHTML += `<th>${player}</th>`;
         });
 
-        renderTabel();
+        renderTabel(false);
+    }
+
+    // Mengubah angka positif jadi negatif atau sebaliknya
+    function ubahTanda(index) {
+        playSound('tap');
+        const inputEl = document.getElementById(`score_${index}`);
+        const currentVal = parseInt(inputEl.value) || 0;
+        if (currentVal !== 0) {
+            inputEl.value = currentVal * -1;
+        } else {
+            inputEl.value = "-";
+            inputEl.focus();
+        }
+    }
+
+    // Menambah/mengurangi angka di kotak input secara instan
+    function tambahCepat(index, amount) {
+        playSound('tap');
+        const inputEl = document.getElementById(`score_${index}`);
+        const currentVal = parseInt(inputEl.value) || 0;
+        inputEl.value = currentVal + amount;
     }
 
     function tambahRonde() {
         let roundScores = [];
+        let adaIsi = false;
         
         players.forEach((_, index) => {
             const inputEl = document.getElementById(`score_${index}`);
-            // Jika kosong, dianggap 0. parseInt mengubah teks jadi angka (bisa positif/negatif)
+            if (inputEl.value !== "") adaIsi = true;
             const val = parseInt(inputEl.value) || 0;
             roundScores.push(val);
-            inputEl.value = ''; // Kosongkan input setelah dicatat
+            inputEl.value = '';
         });
 
+        if (!adaIsi && !confirm("Semua kolom kosong (0 poin). Tetap catat ronde ini?")) {
+            return;
+        }
+
         history.push(roundScores);
+        playSound('add');
         simpanData();
-        renderTabel();
+        renderTabel(true);
     }
 
-    function renderTabel() {
+    function undoRonde() {
+        if (history.length === 0) {
+            alert("Belum ada ronde yang dicatat!");
+            return;
+        }
+        if (confirm(`Hapus catatan Ronde #${history.length}?`)) {
+            history.pop();
+            playSound('undo');
+            simpanData();
+            renderTabel(false);
+        }
+    }
+
+    function renderTabel(animateLastRow) {
+        const tableHeader = document.getElementById('tableHeader');
         const historyBody = document.getElementById('historyBody');
         const totalRow = document.getElementById('totalRow');
         
         historyBody.innerHTML = '';
         let totals = new Array(players.length).fill(0);
 
-        // Render setiap baris riwayat ronde
+        // Hitung & tampilkan riwayat ronde
         history.forEach((round, roundIndex) => {
-            let rowHTML = `<tr><td>#${roundIndex + 1}</td>`;
-            round.forEach((score, pIndex) => {
-                totals[pIndex] += score;
-                const colorClass = score < 0 ? 'minus' : (score > 0 ? 'plus' : '');
-                const sign = score > 0 ? '+' : '';
-                rowHTML += `<td class="${colorClass}">${sign}${score}</td>`;
-            });
-            rowHTML += `</tr>`;
-            historyBody.innerHTML += rowHTML;
+            // ... (kode looping riwayat tetap sama) ...
         });
 
-        // Render baris TOTAL di paling bawah
+        // --- UBAH BAGIAN INI ---
+        // Cari skor tertinggi DAN terendah
+        const maxScore = Math.max(...totals);
+        const minScore = Math.min(...totals);
+        const hasLeader = history.length > 0 && totals.some(t => t !== 0);
+
+        // Update Header & Label Input dengan Mahkota & Tengkorak
+        let headerHTML = `<th>Ronde</th>`;
+        players.forEach((player, index) => {
+            const isLeader = hasLeader && totals[index] === maxScore;
+            // Cek apakah pemain ini ada di posisi terendah (hanya ditandai jika pemain > 1 dan skor tidak semuanya sama)
+            const isLoser = hasLeader && totals[index] === minScore && maxScore !== minScore;
+            
+            let badge = '';
+            if (isLeader) badge = '👑 ';
+            else if (isLoser) badge = '💀 '; // Ikon untuk poin terendah
+
+            headerHTML += `<th class="${isLeader ? 'leader' : (isLoser ? 'loser' : '')}">${badge}${player}</th>`;
+            
+            const labelEl = document.getElementById(`label_${index}`);
+            if (labelEl) {
+                labelEl.innerText = `${badge}${player}`;
+                labelEl.className = isLeader ? 'leader' : (isLoser ? 'loser' : '');
+            }
+        });
+        tableHeader.innerHTML = headerHTML;
+
+        // Render baris TOTAL
+        let totalHTML = `<td>TOTAL</td>`;
+        totals.forEach((total, index) => {
+            const isLeader = hasLeader && total === maxScore;
+            const isLoser = hasLeader && total === minScore && maxScore !== minScore;
+            
+            const colorClass = isLeader ? 'leader' : (isLoser ? 'loser' : (total < 0 ? 'minus' : 'plus'));
+            totalHTML += `<td class="${colorClass}">${total}</td>`;
+        });
+        totalRow.innerHTML = totalHTML;
+    }
+        // Cari skor tertinggi untuk mahkota pemimpin
+        const maxScore = Math.max(...totals);
+        const hasLeader = history.length > 0 && totals.some(t => t !== 0);
+
+        // Update Header & Label Input dengan Mahkota
+        let headerHTML = `<th>Ronde</th>`;
+        players.forEach((player, index) => {
+            const isLeader = hasLeader && totals[index] === maxScore;
+            const crown = isLeader ? '👑 ' : '';
+            headerHTML += `<th class="${isLeader ? 'leader' : ''}">${crown}${player}</th>`;
+            
+            const labelEl = document.getElementById(`label_${index}`);
+            if (labelEl) {
+                labelEl.innerText = `${crown}${player}`;
+                labelEl.className = isLeader ? 'leader' : '';
+            }
+        });
+        tableHeader.innerHTML = headerHTML;
+
+        // Render baris TOTAL
         let totalHTML = `<td>TOTAL</td>`;
         totals.forEach(total => {
-            const colorClass = total < 0 ? 'minus' : '';
+            const isLeader = hasLeader && total === maxScore;
+            const colorClass = isLeader ? 'leader' : (total < 0 ? 'minus' : 'plus');
             totalHTML += `<td class="${colorClass}">${total}</td>`;
         });
         totalRow.innerHTML = totalHTML;
