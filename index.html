@@ -193,6 +193,10 @@
             color: #ffd700 !important;
             text-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
         }
+        .loser {
+            color: #ff5252 !important;
+            text-shadow: 0 0 8px rgba(255, 82, 82, 0.4);
+        }
         .minus { color: #ff5252; }
         .plus { color: #69f0ae; }
     </style>
@@ -237,7 +241,7 @@
         </div>
 
         <div class="action-row">
-            <button class="btn-warning" onclick="undoRonde()">↩️ Hapus Ronde Terakhir</button>
+            <button class="btn-warning" onclick="undoRonde()">↩️ Hapus Ronde</button>
             <button class="btn-danger" onclick="resetGame()">🗑️ Reset Pemain</button>
         </div>
     </div>
@@ -248,7 +252,7 @@
     let history = [];
     let soundEnabled = true;
 
-    // Generator efek suara sederhana tanpa file eksternal
+    // Generator efek suara sederhana
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function playSound(type) {
         if (!soundEnabled) return;
@@ -262,8 +266,8 @@
         const now = audioCtx.currentTime;
         if (type === 'add') {
             osc.type = 'sine';
-            osc.frequency.setValueAtTime(523.25, now); // Nada C5
-            osc.frequency.exponentialRampToValueAtTime(880, now + 0.12); // Naik ke A5
+            osc.frequency.setValueAtTime(523.25, now);
+            osc.frequency.exponentialRampToValueAtTime(880, now + 0.12);
             gain.gain.setValueAtTime(0.15, now);
             gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
             osc.start(now);
@@ -349,7 +353,6 @@
         renderTabel(false);
     }
 
-    // Mengubah angka positif jadi negatif atau sebaliknya
     function ubahTanda(index) {
         playSound('tap');
         const inputEl = document.getElementById(`score_${index}`);
@@ -362,7 +365,6 @@
         }
     }
 
-    // Menambah/mengurangi angka di kotak input secara instan
     function tambahCepat(index, amount) {
         playSound('tap');
         const inputEl = document.getElementById(`score_${index}`);
@@ -415,11 +417,19 @@
 
         // Hitung & tampilkan riwayat ronde
         history.forEach((round, roundIndex) => {
-            // ... (kode looping riwayat tetap sama) ...
+            const isLast = animateLastRow && (roundIndex === history.length - 1);
+            let rowHTML = `<tr class="${isLast ? 'new-row' : ''}"><td>#${roundIndex + 1}</td>`;
+            
+            round.forEach((score, pIndex) => {
+                totals[pIndex] += score;
+                const colorClass = score < 0 ? 'minus' : (score > 0 ? 'plus' : '');
+                const sign = score > 0 ? '+' : '';
+                rowHTML += `<td class="${colorClass}">${sign}${score}</td>`;
+            });
+            rowHTML += `</tr>`;
+            historyBody.innerHTML += rowHTML;
         });
 
-        // --- UBAH BAGIAN INI ---
-        // Cari skor tertinggi DAN terendah
         const maxScore = Math.max(...totals);
         const minScore = Math.min(...totals);
         const hasLeader = history.length > 0 && totals.some(t => t !== 0);
@@ -428,12 +438,11 @@
         let headerHTML = `<th>Ronde</th>`;
         players.forEach((player, index) => {
             const isLeader = hasLeader && totals[index] === maxScore;
-            // Cek apakah pemain ini ada di posisi terendah (hanya ditandai jika pemain > 1 dan skor tidak semuanya sama)
             const isLoser = hasLeader && totals[index] === minScore && maxScore !== minScore;
             
             let badge = '';
             if (isLeader) badge = '👑 ';
-            else if (isLoser) badge = '💀 '; // Ikon untuk poin terendah
+            else if (isLoser) badge = '💀 ';
 
             headerHTML += `<th class="${isLeader ? 'leader' : (isLoser ? 'loser' : '')}">${badge}${player}</th>`;
             
@@ -452,34 +461,6 @@
             const isLoser = hasLeader && total === minScore && maxScore !== minScore;
             
             const colorClass = isLeader ? 'leader' : (isLoser ? 'loser' : (total < 0 ? 'minus' : 'plus'));
-            totalHTML += `<td class="${colorClass}">${total}</td>`;
-        });
-        totalRow.innerHTML = totalHTML;
-    }
-        // Cari skor tertinggi untuk mahkota pemimpin
-        const maxScore = Math.max(...totals);
-        const hasLeader = history.length > 0 && totals.some(t => t !== 0);
-
-        // Update Header & Label Input dengan Mahkota
-        let headerHTML = `<th>Ronde</th>`;
-        players.forEach((player, index) => {
-            const isLeader = hasLeader && totals[index] === maxScore;
-            const crown = isLeader ? '👑 ' : '';
-            headerHTML += `<th class="${isLeader ? 'leader' : ''}">${crown}${player}</th>`;
-            
-            const labelEl = document.getElementById(`label_${index}`);
-            if (labelEl) {
-                labelEl.innerText = `${crown}${player}`;
-                labelEl.className = isLeader ? 'leader' : '';
-            }
-        });
-        tableHeader.innerHTML = headerHTML;
-
-        // Render baris TOTAL
-        let totalHTML = `<td>TOTAL</td>`;
-        totals.forEach(total => {
-            const isLeader = hasLeader && total === maxScore;
-            const colorClass = isLeader ? 'leader' : (total < 0 ? 'minus' : 'plus');
             totalHTML += `<td class="${colorClass}">${total}</td>`;
         });
         totalRow.innerHTML = totalHTML;
