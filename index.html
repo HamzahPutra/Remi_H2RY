@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Penghitung Poin Remi</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            padding: 16px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+        h2 {
+            text-align: center;
+            margin-top: 0;
+            color: #4caf50;
+        }
+        .setup-section input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            border: 1px solid #333;
+            background: #2c2c2c;
+            color: white;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+        .btn-primary { background-color: #4caf50; color: white; }
+        .btn-primary:hover { background-color: #45a049; }
+        .btn-danger { background-color: #d32f2f; color: white; margin-top: 20px; font-size: 14px; padding: 8px; }
+        
+        /* Area Game */
+        .hidden { display: none; }
+        .score-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .player-input-box {
+            background: #2c2c2c;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .player-input-box label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 6px;
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .player-input-box input {
+            width: 100%;
+            padding: 8px;
+            text-align: center;
+            border-radius: 4px;
+            border: 1px solid #444;
+            background: #121212;
+            color: white;
+            font-size: 16px;
+        }
+
+        /* Tabel Riwayat & Total */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        th, td {
+            border: 1px solid #333;
+            padding: 10px 6px;
+            text-align: center;
+        }
+        th { background-color: #2c2c2c; color: #bbb; }
+        .total-row {
+            background-color: #263238;
+            font-weight: bold;
+            font-size: 16px;
+            color: #4caf50;
+        }
+        .minus { color: #ff5252; }
+        .plus { color: #69f0ae; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>♠️ Poin Remi ♥️</h2>
+
+    <!-- Bagian 1: Input Nama Pemain -->
+    <div id="setupSection" class="setup-section">
+        <p style="font-size: 14px; color: #aaa;">Masukkan nama pemain (minimal 2, maksimal 4):</p>
+        <input type="text" id="p1" placeholder="Nama Pemain 1">
+        <input type="text" id="p2" placeholder="Nama Pemain 2">
+        <input type="text" id="p3" placeholder="Nama Pemain 3 (Opsional)">
+        <input type="text" id="p4" placeholder="Nama Pemain 4 (Opsional)">
+        <button class="btn-primary" onclick="mulaiGame()">Mulai Permainan</button>
+    </div>
+
+    <!-- Bagian 2: Arena Permainan & Riwayat -->
+    <div id="gameSection" class="hidden">
+        <div id="inputContainer" class="score-inputs"></div>
+        <button class="btn-primary" onclick="tambahRonde()">+ Catat Poin Ronde Ini</button>
+
+        <table>
+            <thead>
+                <tr id="tableHeader">
+                    <th>Ronde</th>
+                </tr>
+            </thead>
+            <tbody id="historyBody">
+                <!-- Riwayat ronde masuk ke sini -->
+            </tbody>
+            <tfoot>
+                <tr id="totalRow" class="total-row">
+                    <td>TOTAL</td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <button class="btn-danger" onclick="resetGame()">Reset / Ganti Pemain</button>
+    </div>
+</div>
+
+<script>
+    let players = [];
+    let history = []; // Menyimpan array poin per ronde
+
+    // Cek apakah ada data tersimpan saat halaman dibuka
+    window.onload = function() {
+        const savedPlayers = localStorage.getItem('remi_players');
+        const savedHistory = localStorage.getItem('remi_history');
+        if (savedPlayers) {
+            players = JSON.parse(savedPlayers);
+            history = savedHistory ? JSON.parse(savedHistory) : [];
+            tampilkanArena();
+        }
+    };
+
+    function mulaiGame() {
+        const inputs = [
+            document.getElementById('p1').value.trim(),
+            document.getElementById('p2').value.trim(),
+            document.getElementById('p3').value.trim(),
+            document.getElementById('p4').value.trim()
+        ];
+
+        // Ambil hanya kolom yang diisi
+        players = inputs.filter(name => name !== "");
+
+        if (players.length < 2) {
+            alert("Minimal masukkan 2 nama pemain!");
+            return;
+        }
+
+        history = [];
+        simpanData();
+        tampilkanArena();
+    }
+
+    function tampilkanArena() {
+        document.getElementById('setupSection').classList.add('hidden');
+        document.getElementById('gameSection').classList.remove('hidden');
+
+        // Buat kotak input poin & header tabel sesuai jumlah pemain
+        const inputContainer = document.getElementById('inputContainer');
+        const tableHeader = document.getElementById('tableHeader');
+        
+        inputContainer.innerHTML = '';
+        tableHeader.innerHTML = '<th>Ronde</th>';
+
+        players.forEach((player, index) => {
+            // Kotak input
+            inputContainer.innerHTML += `
+                <div class="player-input-box">
+                    <label>${player}</label>
+                    <input type="number" id="score_${index}" placeholder="0" inputmode="numeric">
+                </div>
+            `;
+            // Header tabel
+            tableHeader.innerHTML += `<th>${player}</th>`;
+        });
+
+        renderTabel();
+    }
+
+    function tambahRonde() {
+        let roundScores = [];
+        
+        players.forEach((_, index) => {
+            const inputEl = document.getElementById(`score_${index}`);
+            // Jika kosong, dianggap 0. parseInt mengubah teks jadi angka (bisa positif/negatif)
+            const val = parseInt(inputEl.value) || 0;
+            roundScores.push(val);
+            inputEl.value = ''; // Kosongkan input setelah dicatat
+        });
+
+        history.push(roundScores);
+        simpanData();
+        renderTabel();
+    }
+
+    function renderTabel() {
+        const historyBody = document.getElementById('historyBody');
+        const totalRow = document.getElementById('totalRow');
+        
+        historyBody.innerHTML = '';
+        let totals = new Array(players.length).fill(0);
+
+        // Render setiap baris riwayat ronde
+        history.forEach((round, roundIndex) => {
+            let rowHTML = `<tr><td>#${roundIndex + 1}</td>`;
+            round.forEach((score, pIndex) => {
+                totals[pIndex] += score;
+                const colorClass = score < 0 ? 'minus' : (score > 0 ? 'plus' : '');
+                const sign = score > 0 ? '+' : '';
+                rowHTML += `<td class="${colorClass}">${sign}${score}</td>`;
+            });
+            rowHTML += `</tr>`;
+            historyBody.innerHTML += rowHTML;
+        });
+
+        // Render baris TOTAL di paling bawah
+        let totalHTML = `<td>TOTAL</td>`;
+        totals.forEach(total => {
+            const colorClass = total < 0 ? 'minus' : '';
+            totalHTML += `<td class="${colorClass}">${total}</td>`;
+        });
+        totalRow.innerHTML = totalHTML;
+    }
+
+    function simpanData() {
+        localStorage.setItem('remi_players', JSON.stringify(players));
+        localStorage.setItem('remi_history', JSON.stringify(history));
+    }
+
+    function resetGame() {
+        if (confirm("Yakin ingin menghapus semua riwayat dan mengganti pemain?")) {
+            localStorage.removeItem('remi_players');
+            localStorage.removeItem('remi_history');
+            location.reload();
+        }
+    }
+</script>
+
+</body>
+</html>
